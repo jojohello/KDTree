@@ -24,7 +24,7 @@ public:
 class EosKDTree
 {
 public:
-	EosKDTreeNode* CreateTree(float left, float right, float top, float bottom, std::vector<EosMistLineSegment>& lines);
+	EosKDTreeNode* createTree(float left, float right, float top, float bottom, std::vector<EosMistLineSegment>& lines);
 	void clearTree();
 
 	//temp

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "EosKDTree.h"
 
-EosKDTreeNode* EosKDTree::CreateTree(float left, float right, float top, float bottom, std::vector<EosMistLineSegment>& lines)
+EosKDTreeNode* EosKDTree::createTree(float left, float right, float top, float bottom, std::vector<EosMistLineSegment>& lines)
 {
 	clearTree();
 	m_pRoot = new EosKDTreeNode(left, right, bottom, top);
@@ -29,6 +29,11 @@ void EosKDTree::doCreateTree(EosKDTreeNode* node, std::vector<EosMistLineSegment
 	int lineCount = lines.size();
 	if (lineCount <= 2)
 	{
+		for(int i=0; i<lineCount; i++)
+		{
+			node->m_lines.push_back(lines[i]);
+		}
+
 		return;
 	}
 
@@ -75,9 +80,11 @@ void EosKDTree::doCreateTree(EosKDTreeNode* node, std::vector<EosMistLineSegment
 	int index = findMidPoint(points, dir);
 	float splitValue = 0;
 	if (dir == E_KDTreeDirection::eVertical)
-		splitValue = points[index].m_pos.y;
-	else
 		splitValue = points[index].m_pos.x;
+	else
+		splitValue = points[index].m_pos.y;
+
+	points.clear();
 
 	spliteAndCreateChildren(node, splitValue, dir, lines);
 }
@@ -103,11 +110,11 @@ void EosKDTree::clearNode(EosKDTreeNode* node)
 }
 
 // jojohello log
-int partitionCount = 0;
+//int partitionCount = 0;
 int EosKDTree::findMidPoint(std::vector<PointInfo>& points, E_KDTreeDirection dir)
 {
 	// jojohello log
-	partitionCount = 0;
+	//partitionCount = 0;
 
 	return doFindMidPoint(0, points.size() - 1, points, dir);
 }
@@ -117,22 +124,22 @@ int EosKDTree::doFindMidPoint(int l, int h, std::vector<PointInfo>& points, E_KD
 {
 	int newL = partition(l, h, points, dir);
 	// jojohello log
-	++partitionCount;
-	printf("---------- partition %d ------------------ \n", partitionCount);
-	printf("newL = %d\n", newL);
-	int count = points.size();
-	for (int i = 0; i < count; i++) {
-		printf("point%d: (%d, %d)\n", i + 1, (int)(points[i].m_pos.x), (int)(points[i].m_pos.y));
-	}
+	//++partitionCount;
+	//printf("---------- partition %d ------------------ \n", partitionCount);
+	//printf("newL = %d\n", newL);
+	//int count = points.size();
+	//for (int i = 0; i < count; i++) {
+	//	printf("point%d: (%d, %d)\n", i + 1, (int)(points[i].m_pos.x), (int)(points[i].m_pos.y));
+	//}
 
 	int midIndex = floor(points.size() * 0.5);
-	if (newL == midIndex || newL == midIndex + 1)
+	if (newL == midIndex || newL == midIndex - 1)
 		return newL;
 
 	if (newL > midIndex)
 		return doFindMidPoint(l, newL, points, dir);
 	else
-		return doFindMidPoint(newL, h, points, dir);
+		return doFindMidPoint(newL+1, h, points, dir);
 }
 
 int EosKDTree::partition(int l, int h, std::vector<PointInfo>& points, E_KDTreeDirection dir)
@@ -148,7 +155,6 @@ int EosKDTree::partition(int l, int h, std::vector<PointInfo>& points, E_KDTreeD
 	{
 		for(int i=h; i>l; --i)
 		{
-			--h;
 			if(dir == E_KDTreeDirection::eHorizontal)
 			{
 				v1 = points[l].m_pos.y;
@@ -167,11 +173,13 @@ int EosKDTree::partition(int l, int h, std::vector<PointInfo>& points, E_KDTreeD
 				points[l] = temp;
 				break;
 			}
+
+			--h;
 		}
 
 		for(int i=l; i<h; ++i)
 		{
-			++l;
+			
 			if (dir == E_KDTreeDirection::eHorizontal) {
 				v1 = points[h].m_pos.y;
 				v2 = points[i].m_pos.y;
@@ -187,6 +195,8 @@ int EosKDTree::partition(int l, int h, std::vector<PointInfo>& points, E_KDTreeD
 				points[h] = temp;
 				break;
 			}
+
+			++l;
 		}
 	}
 
@@ -230,8 +240,8 @@ void EosKDTree::spliteAndCreateChildren(EosKDTreeNode* parent, float splitValue,
 			compareValue2 = lines[i].m_endPoint.y;
 		}else
 		{
-			compareValue1 = lines[i].m_startPoint.y;
-			compareValue2 = lines[i].m_endPoint.y;
+			compareValue1 = lines[i].m_startPoint.x;
+			compareValue2 = lines[i].m_endPoint.x;
 		}
 
 		// s1: in the left node rect
@@ -257,7 +267,24 @@ void EosKDTree::spliteAndCreateChildren(EosKDTreeNode* parent, float splitValue,
 				rightStartPoint = lines[i].m_endPoint;
 			}
 
-			//if(dir == )
+			if(dir == eVertical)
+			{
+				float startX = lines[i].m_startPoint.x;
+				float startY = lines[i].m_startPoint.y;
+				float endX = lines[i].m_endPoint.x;
+				float endY = lines[i].m_endPoint.y;
+				float midY = startY + (splitValue - startX) * (endY - startY) / (endX - startX);
+			
+				midPoint.x = splitValue;
+				midPoint.y = midY;
+			}else
+			{
+				float startX = lines[i].m_startPoint.x;
+				float startY = lines[i].m_startPoint.y;
+				float endX = lines[i].m_endPoint.x;
+				float endY = lines[i].m_endPoint.y;
+				float midX = startX + (splitValue - startY) * (endX- startX) / (endY - startY);
+			}
 
 			EosMistLineSegment leftLine(leftStartPoint, midPoint);
 			EosMistLineSegment rightLine(rightStartPoint, midPoint);
@@ -271,5 +298,4 @@ void EosKDTree::spliteAndCreateChildren(EosKDTreeNode* parent, float splitValue,
 		doCreateTree(parent->m_pLeftChild, leftLines);
 		doCreateTree(parent->m_pRightChild, rightLines);
 	}
-
 }
