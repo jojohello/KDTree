@@ -10,10 +10,11 @@
 
 std::vector<EosMistLineSegment> createLines(float l, float r, float b, float t, int count);
 void testFindMidPoint(float l, float r, float b, float t, std::vector<EosMistLineSegment>& lines);
+void testBuildTree(float l, float r, float b, float t, std::vector<EosMistLineSegment>& lines);
 
 int main()
 {
-	int lineCount = 8;
+	int lineCount = 5;
 	float l = 0;
 	float r = 100;
 	float b = 0;
@@ -24,7 +25,9 @@ int main()
 		printf("line%d: (%f, %f), (%f, %f)\n", i + 1, lines[i].m_startPoint.x, lines[i].m_startPoint.y, lines[i].m_endPoint.x, lines[i].m_endPoint.y);
 	}*/
 
-	testFindMidPoint(l, r, b, t, lines);
+	//testFindMidPoint(l, r, b, t, lines);
+
+	testBuildTree(l, r, b, t, lines);
 
 	printf("press any key to exit");
 	_getch();
@@ -91,7 +94,6 @@ void testFindMidPoint(float l, float r, float b, float t, std::vector<EosMistLin
 		PointInfo point = points[i];
 		if (point.m_pos.x < minX)
 			minX = point.m_pos.x;
-		if (point.m_pos.x > maxX)
 			maxX = point.m_pos.x;
 		if (point.m_pos.y < minY)
 			minY = point.m_pos.y;
@@ -126,5 +128,11 @@ void testFindMidPoint(float l, float r, float b, float t, std::vector<EosMistLin
 	for (int i = 0; i < count; i++) {
 		printf("point%d: (%d, %d)\n", i + 1, (int)(points[i].m_pos.x), (int)(points[i].m_pos.y));
 	}
+}
+
+void testBuildTree(float l, float r, float b, float t, std::vector<EosMistLineSegment>& lines)
+{
+	EosKDTree* tree = new EosKDTree();
+	tree->createTree(l, r, t, b, lines);
 }
 
